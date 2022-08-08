@@ -20,7 +20,7 @@ param storageAccountId string
 @description('Optional. The authentication mode which the Batch service will use to manage the auto-storage account.')
 param storageAuthenticationMode string = 'StorageKeys'
 
-@description('Optional. The reference to a user assigned identity associated with the Batch pool which a compute node will use.')
+@description('Optional. The resource ID of a user assigned identity assigned to pools which have compute nodes that need access to auto-storage.')
 param storageAccessIdentity string = ''
 
 @allowed([
@@ -33,12 +33,13 @@ param poolAllocationMode string = 'BatchService'
 @description('Conditional. The key vault to associate with the Batch account. Required if the \'poolAllocationMode\' is set to \'UserSubscription\' and requires the service principal \'Microsoft Azure Batch\' to be granted contributor permissions on this key vault.')
 param keyVaultReferenceResourceId string = ''
 
+@description('Optional. Whether or not public network access is allowed for this resource. For security reasons it should be disabled. If not specified, it will be disabled by default if private endpoints are set.')
 @allowed([
-  'Disabled'
+  ''
   'Enabled'
+  'Disabled'
 ])
-@description('Optional. The network access type for operating on the resources in the Batch account.')
-param publicNetworkAccess string = 'Enabled'
+param publicNetworkAccess string = ''
 
 @description('Optional. Specifies the number of days that logs will be kept for; a value of 0 will retain data indefinitely.')
 @minValue(0)
@@ -189,7 +190,7 @@ resource batchAccount 'Microsoft.Batch/batchAccounts@2022-01-01' = {
       url: keyVaultReferenceKeyVault.properties.vaultUri
     } : null
     poolAllocationMode: poolAllocationMode
-    publicNetworkAccess: publicNetworkAccess
+    publicNetworkAccess: !empty(publicNetworkAccess) ? any(publicNetworkAccess) : (!empty(privateEndpoints) ? 'Disabled' : null)
   }
 }
 
@@ -227,7 +228,7 @@ module batchAccount_privateEndpoints '../../Microsoft.Network/privateEndpoints/d
     enableDefaultTelemetry: enableReferencedModulesTelemetry
     location: reference(split(privateEndpoint.subnetResourceId, '/subnets/')[0], '2020-06-01', 'Full').location
     lock: contains(privateEndpoint, 'lock') ? privateEndpoint.lock : lock
-    privateDnsZoneGroups: contains(privateEndpoint, 'privateDnsZoneGroups') ? privateEndpoint.privateDnsZoneGroups : []
+    privateDnsZoneGroup: contains(privateEndpoint, 'privateDnsZoneGroup') ? privateEndpoint.privateDnsZoneGroup : {}
     roleAssignments: contains(privateEndpoint, 'roleAssignments') ? privateEndpoint.roleAssignments : []
     tags: contains(privateEndpoint, 'tags') ? privateEndpoint.tags : {}
     manualPrivateLinkServiceConnections: contains(privateEndpoint, 'manualPrivateLinkServiceConnections') ? privateEndpoint.manualPrivateLinkServiceConnections : []

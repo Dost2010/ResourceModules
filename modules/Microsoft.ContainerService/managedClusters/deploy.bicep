@@ -296,6 +296,8 @@ param diskEncryptionSetID string = ''
   'kube-controller-manager'
   'kube-scheduler'
   'cluster-autoscaler'
+  'kube-audit-admin'
+  'guard'
 ])
 param diagnosticLogCategoriesToEnable array = [
   'kube-apiserver'
@@ -303,6 +305,8 @@ param diagnosticLogCategoriesToEnable array = [
   'kube-controller-manager'
   'kube-scheduler'
   'cluster-autoscaler'
+  'kube-audit-admin'
+  'guard'
 ]
 
 @description('Optional. The name of metrics that will be streamed.')
@@ -374,7 +378,7 @@ resource defaultTelemetry 'Microsoft.Resources/deployments@2021-04-01' = if (ena
   }
 }
 
-resource managedCluster 'Microsoft.ContainerService/managedClusters@2022-03-02-preview' = {
+resource managedCluster 'Microsoft.ContainerService/managedClusters@2022-04-02-preview' = {
   name: name
   location: location
   tags: tags
